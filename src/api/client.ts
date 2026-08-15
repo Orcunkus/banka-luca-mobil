@@ -19,34 +19,30 @@ export async function dosyaAyristir(
   dosyaAdi: string,
   mimeType: string | null | undefined
 ): Promise<ParseSonucu> {
-  const formData = new FormData();
-  // React Native'de FormData'ya dosya eklemenin standart yolu budur --
-  // web'deki File nesnesi yerine {uri, name, type} şeklinde bir nesne verilir.
-  formData.append("dosya", {
-    uri: dosyaUri,
-    name: dosyaAdi,
-    type: mimeType || "application/octet-stream",
-  } as unknown as Blob);
+  // NOT: Burada bilerek global fetch + FormData KULLANMIYORUZ.
+  // Android'de React Native'in yeni ağ katmanı, {uri, name, type} şeklinde
+  // elle oluşturulan "dosya" nesnelerini FormData'ya eklerken
+  // "Unsupported FormDataPart implementation" hatası veriyor (bilinen bir
+  // React Native/Expo sorunu). Bunun yerine expo-file-system'in kendi
+  // multipart yükleme fonksiyonunu kullanıyoruz, bu native tarafta
+  // güvenilir şekilde çalışıyor.
+  const url = `${BASE_URL}/api/parse?banka=${encodeURIComponent(banka)}`;
 
-  const resp = await fetch(
-    `${BASE_URL}/api/parse?banka=${encodeURIComponent(banka)}`,
-    {
-      method: "POST",
-      body: formData,
-      headers: {
-        Accept: "application/json",
-        // Content-Type'ı BİLEREK set etmiyoruz -- fetch, FormData
-        // gönderirken multipart sınırını (boundary) kendisi ekliyor.
-      },
-    }
-  );
+  const sonuc = await FileSystem.uploadAsync(url, dosyaUri, {
+    httpMethod: "POST",
+    uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+    fieldName: "dosya",
+    mimeType: mimeType || "application/octet-stream",
+    headers: {
+      Accept: "application/json",
+    },
+  });
 
-  if (!resp.ok) {
-    const hataMetni = await resp.text().catch(() => "");
-    throw new Error(`Ayrıştırma başarısız (${resp.status}): ${hataMetni}`);
+  if (sonuc.status < 200 || sonuc.status >= 300) {
+    throw new Error(`Ayrıştırma başarısız (${sonuc.status}): ${sonuc.body}`);
   }
 
-  return resp.json();
+  return JSON.parse(sonuc.body);
 }
 
 /** Backend'den Luca formatlı CSV alır ve cihazda geçici bir dosyaya yazar,
