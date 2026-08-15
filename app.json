@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Banka Ekstresi -> Luca",
+    "slug": "banka-luca-aktarim",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "backgroundColor": "#0B5FFF",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.orcunkus.bankalucaaktarim"
+    },
+    "android": {
+      "package": "com.orcunkus.bankalucaaktarim",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B5FFF"
+      }
+    }
+  }
+}
